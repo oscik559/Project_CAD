@@ -1,0 +1,123 @@
+# .gitignore
+# This is a sample .gitignore file for Python projects.
+
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Rope project settings
+.ropeproject/
+
+# env files
+.env
+.env.*
+
+# Local settings
+local_settings.py
+
+# Logs and databases
+*.log
+*.sqlite3
+*.db
+
+# Coverage reports
+coverage/
+
+# Backup files
+*~
+*.bak
+*.swp
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Ignore compiled wheel files
+*.whl
+
+# Ignore tox virtualenvs
+.tox/
+
+# Ignore pdf files
+*.pdf
+*.pptx
+*.docx
+*.xlsx
+*.db-shm
+*.db-wal
+
+
+
