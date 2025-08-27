@@ -87,7 +87,12 @@ class Typedef(Base):
 
 
 # Database setup
-DATABASE_URL = "sqlite:///database/knowledge.db"
+import os
+
+db_path = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "databases", "knowledge.db"
+)
+DATABASE_URL = f"sqlite:///{db_path}"
 engine = create_engine(DATABASE_URL, echo=False)
 Base.metadata.create_all(engine)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
