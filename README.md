@@ -7,7 +7,7 @@ A comprehensive Python system for scraping and extracting CATIA V5 interface doc
 
 ## Overview
 
-This project provides an advanced web scraping system that extracts comprehensive CATIA V5 interface documentation from http://catiadoc.free.fr/. Using sophisticated HTML parsing and pattern recognition, it captures detailed information about:
+This project provides an advanced web scraping system that extracts comprehensive CATIA V5 interface documentation from catiadoc. Using sophisticated HTML parsing and pattern recognition, it captures detailed information about:
 
 - **Interfaces** with complete inheritance hierarchies and type information
 - **Properties** with detailed descriptions, types, and access patterns

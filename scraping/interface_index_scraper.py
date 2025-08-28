@@ -334,159 +334,32 @@ class InterfaceIndexScraper:
 
     def extract_properties(self, soup: BeautifulSoup) -> Dict[str, any]:
         """
-        Extract properties using HTML structure approach - looking for PropertyIndex anchor and dt elements.
+        Extract properties using HTML structure approach - looking for PropertyIndex anchor and structured dt/dd elements.
         Returns dictionary with 'properties' list and 'count'.
         """
         properties = []
 
         try:
-            # Find PropertyIndex anchor
+            # HTML Structure-based extraction
             prop_anchor = soup.find("a", {"name": "PropertyIndex"})
             if prop_anchor:
-                # Start from the parent (h2 heading) and look for dt elements directly
+                # Start from the parent (h2 heading) and look for dt elements
                 current = prop_anchor.parent
                 sibling = current.next_sibling
 
                 while sibling:
                     if hasattr(sibling, "name") and sibling.name == "dt":
-                        dt_text = sibling.get_text(strip=True)
-
-                        # Use regex to find all property patterns in the dt text
-                        # Pattern: PropertyName followed by Returns/Sets/Gets
-                        property_matches = re.finditer(
-                            r"([A-Za-z][A-Za-z0-9_]*)(Returns?|Sets?|Gets?[^A-Z]*?)(?=[A-Z][a-z]+(?:Returns?|Sets?|Gets?)|$)",
-                            dt_text,
-                        )
-
-                        for match in property_matches:
-                            property_name = match.group(1)
-                            description_part = match.group(2)
-
-                            # Extract the full description until the next property or end
-                            start_pos = match.start()
-                            end_pos = match.end()
-
-                            # Look for the next property name to determine where this description ends
-                            remaining_text = dt_text[end_pos:]
-                            next_prop_match = re.search(
-                                r"[A-Z][a-z]+(?:Returns?|Sets?|Gets?)", remaining_text
-                            )
-
-                            if next_prop_match:
-                                # Description continues until the next property
-                                description = dt_text[
-                                    start_pos
-                                    + len(property_name) : end_pos
-                                    + next_prop_match.start()
-                                ]
-                            else:
-                                # Description continues to the end
-                                description = dt_text[start_pos + len(property_name) :]
-
-                            # Clean up description
-                            description = re.sub(r"\s+", " ", description).strip()
-
-                            properties.append(
-                                {"name": property_name, "description": description}
-                            )
-
-                        # If the regex approach didn't work well, try a simpler text-splitting approach
-                        if not properties:
-                            # Split by common property description words and try to extract property names
-                            lines = dt_text.replace(".", ".\n").split("\n")
-                            current_property = None
-                            current_description = []
-
-                            for line in lines:
-                                line = line.strip()
-                                if not line:
-                                    continue
-
-                                # Check if line starts with a property name pattern
-                                prop_match = re.match(
-                                    r"^([A-Za-z][A-Za-z0-9_]*)(Returns?|Sets?|Gets?)",
-                                    line,
-                                )
-                                if prop_match:
-                                    # Save previous property if exists
-                                    if current_property:
-                                        description = " ".join(
-                                            current_description
-                                        ).strip()
-                                        properties.append(
-                                            {
-                                                "name": current_property,
-                                                "description": description,
-                                            }
-                                        )
-
-                                    # Start new property
-                                    current_property = prop_match.group(1)
-                                    current_description = [
-                                        line[len(current_property) :].strip()
-                                    ]
-                                else:
-                                    # Continue description for current property
-                                    if current_property:
-                                        current_description.append(line)
-
-                            # Don't forget the last property
-                            if current_property:
-                                description = " ".join(current_description).strip()
-                                properties.append(
-                                    {
-                                        "name": current_property,
-                                        "description": description,
-                                    }
-                                )
-
-                        break  # We found the main dt element
+                        # Extract properties from properly structured HTML
+                        properties = self._extract_properties_from_html_structure(sibling)
+                        break
 
                     elif hasattr(sibling, "name") and sibling.name in ["h2", "h3"]:
                         # Stop if we hit another section heading
                         section_text = sibling.get_text(strip=True)
-                        if "Method Index" in section_text:
+                        if any(keyword in section_text for keyword in ["Method Index", "Example", "Returns"]):
                             break
 
                     sibling = sibling.next_sibling
-
-            # Fallback: Try the original dl-based approach for interfaces with different structure
-            if not properties:
-                prop_anchor = soup.find("a", {"name": "PropertyIndex"})
-                if prop_anchor:
-                    current = prop_anchor
-                    while current:
-                        current = current.next_sibling
-                        if hasattr(current, "name") and current.name == "dl":
-                            dt_elements = current.find_all("dt")
-                            for dt in dt_elements:
-                                link = dt.find("a")
-                                if link:
-                                    property_name = link.get_text(strip=True)
-                                    if property_name and len(property_name) > 1:
-                                        # Find description
-                                        dd = dt.find_next_sibling("dd")
-                                        if dd:
-                                            description = dd.get_text(strip=True)
-                                            description = re.sub(
-                                                r"\s+", " ", description
-                                            )
-                                        else:
-                                            description = ""
-
-                                        properties.append(
-                                            {
-                                                "name": property_name,
-                                                "description": description,
-                                            }
-                                        )
-                            break
-                        elif hasattr(current, "name") and current.name in [
-                            "hr",
-                            "h2",
-                            "h3",
-                        ]:
-                            break
 
             properties = properties[:15]  # Reasonable limit
 
@@ -506,128 +379,32 @@ class InterfaceIndexScraper:
 
     def extract_methods(self, soup: BeautifulSoup) -> Dict[str, any]:
         """
-        Extract methods using HTML structure approach - looking for MethodIndex anchor and dt elements.
+        Extract methods using HTML structure approach - looking for MethodIndex anchor and structured dt/dd elements.
         Returns dictionary with 'methods' list and 'count'.
         """
         methods = []
 
         try:
-            # Find MethodIndex anchor
+            # HTML Structure-based extraction
             method_anchor = soup.find("a", {"name": "MethodIndex"})
             if method_anchor:
-                # Start from the parent (h2 heading) and look for dt elements directly
+                # Start from the parent (h2 heading) and look for dt elements
                 current = method_anchor.parent
                 sibling = current.next_sibling
 
                 while sibling:
                     if hasattr(sibling, "name") and sibling.name == "dt":
-                        dt_text = sibling.get_text(strip=True)
-
-                        # Use regex to find all method patterns in the dt text
-                        # Pattern: MethodName followed by description
-                        method_matches = re.finditer(
-                            r"([A-Za-z][A-Za-z0-9_]*)((?:Returns?|Sets?|Gets?|Creates?|Adds?|Removes?|Modifies?)[^A-Z]*?)(?=[A-Z][a-z]+(?:Returns?|Sets?|Gets?|Creates?|Adds?|Removes?|Modifies?)|$)",
-                            dt_text,
-                        )
-
-                        for match in method_matches:
-                            method_name = match.group(1).strip()
-                            method_desc = match.group(2).strip()
-
-                            if method_name and len(method_name) > 1:
-                                methods.append(
-                                    {"name": method_name, "description": method_desc}
-                                )
-
-                        # If the regex approach didn't work well, try a simpler text-splitting approach
-                        if not methods:
-                            lines = dt_text.split(".")
-                            current_method = None
-                            current_desc = []
-
-                            for line in lines:
-                                line = line.strip()
-                                if line:
-                                    # Check if this line starts with a method name (uppercase letter)
-                                    method_match = re.match(
-                                        r"^([A-Z][A-Za-z0-9_]*)\s*(.*)", line
-                                    )
-                                    if method_match:
-                                        # Save previous method if exists
-                                        if current_method:
-                                            methods.append(
-                                                {
-                                                    "name": current_method,
-                                                    "description": " ".join(
-                                                        current_desc
-                                                    ).strip(),
-                                                }
-                                            )
-
-                                        current_method = method_match.group(1)
-                                        current_desc = (
-                                            [method_match.group(2)]
-                                            if method_match.group(2)
-                                            else []
-                                        )
-                                    else:
-                                        # This is part of the description
-                                        if current_method:
-                                            current_desc.append(line)
-
-                            # Don't forget the last method
-                            if current_method:
-                                methods.append(
-                                    {
-                                        "name": current_method,
-                                        "description": " ".join(current_desc).strip(),
-                                    }
-                                )
-
-                        break  # We found the main dt element
+                        # Extract methods from properly structured HTML
+                        methods = self._extract_methods_from_html_structure(sibling)
+                        break
 
                     elif hasattr(sibling, "name") and sibling.name in ["h2", "h3"]:
                         # Stop if we hit another section heading
                         section_text = sibling.get_text(strip=True)
-                        if any(
-                            keyword in section_text
-                            for keyword in ["Property Index", "Example", "Returns"]
-                        ):
+                        if any(keyword in section_text for keyword in ["Property Index", "Example", "Returns"]):
                             break
 
                     sibling = sibling.next_sibling
-
-            # Fallback: Try the original dl-based approach for interfaces with different structure
-            if not methods:
-                method_anchor = soup.find("a", {"name": "MethodIndex"})
-                if method_anchor:
-                    current = method_anchor
-                    while current:
-                        current = current.next_sibling
-                        if hasattr(current, "name") and current.name == "dl":
-                            dt_elements = current.find_all("dt")
-                            for dt in dt_elements:
-                                link = dt.find("a")
-                                if link:
-                                    method_name = link.get_text(strip=True)
-                                    # Get description from following dd element
-                                    dd = dt.find_next_sibling("dd")
-                                    method_desc = dd.get_text(strip=True) if dd else ""
-
-                                    if method_name and len(method_name) > 1:
-                                        methods.append(
-                                            {
-                                                "name": method_name,
-                                                "description": method_desc,
-                                            }
-                                        )
-                            break
-                        elif hasattr(current, "name") and current.name in [
-                            "hr",
-                            "h2",
-                            "h3",
-                        ]:
-                            break
 
             methods = methods[:20]  # Reasonable limit
 
@@ -644,6 +421,116 @@ class InterfaceIndexScraper:
                 ", ".join([method["name"] for method in methods]) if methods else None
             ),
         }
+
+    def _extract_methods_from_html_structure(self, dt_element) -> List[Dict[str, str]]:
+        """
+        Extract methods from structured HTML using dt/dd elements and links.
+        This is the most reliable method for CATIA documentation.
+        """
+        methods = []
+        
+        try:
+            # Find all links within the dt element - these are method names
+            method_links = dt_element.find_all("a")
+            
+            for link in method_links:
+                method_name = link.get_text(strip=True)
+                
+                # Find the corresponding description
+                # Look for dd element that follows this link
+                description = ""
+                
+                # Try to find the dd that contains the description for this method
+                # Navigate from the link to find associated dd
+                current = link.parent
+                while current:
+                    # Look for dd element at same level or nearby
+                    dd = current.find_next("dd")
+                    if dd:
+                        # Get the text content and clean it
+                        desc_text = dd.get_text(strip=True)
+                        # Make sure this description belongs to our method
+                        # (check that it doesn't contain another method name)
+                        other_methods = [other_link.get_text(strip=True) for other_link in method_links if other_link != link]
+                        
+                        # If description doesn't start with another method name, it's likely ours
+                        if not any(desc_text.startswith(other_method) for other_method in other_methods):
+                            description = desc_text
+                            break
+                    
+                    current = current.parent
+                    if not current or current.name in ['body', 'html']:
+                        break
+                
+                # Clean up description
+                description = re.sub(r'\s+', ' ', description).strip()
+                description = re.sub(r'^[^a-zA-Z]*', '', description)  # Remove leading non-letters
+                
+                if method_name and len(method_name) >= 2:
+                    methods.append({
+                        "name": method_name,
+                        "description": description
+                    })
+            
+        except Exception as e:
+            logger.warning(f"Error in HTML structure extraction: {e}")
+        
+        return methods
+
+    def _extract_properties_from_html_structure(self, dt_element) -> List[Dict[str, str]]:
+        """
+        Extract properties from structured HTML using dt/dd elements and links.
+        This is the most reliable method for CATIA documentation.
+        """
+        properties = []
+        
+        try:
+            # Find all links within the dt element - these are property names
+            property_links = dt_element.find_all("a")
+            
+            for link in property_links:
+                property_name = link.get_text(strip=True)
+                
+                # Find the corresponding description
+                # Look for dd element that follows this link
+                description = ""
+                
+                # Try to find the dd that contains the description for this property
+                # Navigate from the link to find associated dd
+                current = link.parent
+                while current:
+                    # Look for dd element at same level or nearby
+                    dd = current.find_next("dd")
+                    if dd:
+                        # Get the text content and clean it
+                        desc_text = dd.get_text(strip=True)
+                        # Make sure this description belongs to our property
+                        # (check that it doesn't contain another property name)
+                        other_properties = [other_link.get_text(strip=True) for other_link in property_links if other_link != link]
+                        
+                        # If description doesn't start with another property name, it's likely ours
+                        if not any(desc_text.startswith(other_prop) for other_prop in other_properties):
+                            description = desc_text
+                            break
+                    
+                    current = current.parent
+                    if not current or current.name in ['body', 'html']:
+                        break
+                
+                # Clean up description
+                description = re.sub(r'\s+', ' ', description).strip()
+                description = re.sub(r'^[^a-zA-Z]*', '', description)  # Remove leading non-letters
+                
+                if property_name and len(property_name) >= 2:
+                    properties.append({
+                        "name": property_name,
+                        "description": description
+                    })
+            
+        except Exception as e:
+            logger.warning(f"Error in HTML structure extraction for properties: {e}")
+        
+        return properties
 
     def scrape_interface_details(
         self, interface_info: Dict[str, str]
