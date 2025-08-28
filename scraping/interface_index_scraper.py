@@ -205,7 +205,7 @@ class InterfaceIndexScraper:
         """
         try:
             # Find all <hr> tags
-            hr_tags = soup.find_all('hr')
+            hr_tags = soup.find_all("hr")
 
             if len(hr_tags) < 2:
                 return ""
@@ -221,9 +221,9 @@ class InterfaceIndexScraper:
 
             while current and current != second_hr:
                 # Look for <b>Role:</b> pattern
-                if hasattr(current, 'name') and current.name == 'b':
+                if hasattr(current, "name") and current.name == "b":
                     bold_text = current.get_text(strip=True)
-                    if bold_text and bold_text.lower() in ['role:', 'role']:
+                    if bold_text and bold_text.lower() in ["role:", "role"]:
                         role_found = True
                         # Skip to next element to start collecting role content
                         current = current.next_sibling
@@ -232,23 +232,23 @@ class InterfaceIndexScraper:
                 # If we found the Role marker, collect all subsequent content
                 if role_found:
                     # Handle text nodes
-                    if hasattr(current, 'strip'):
+                    if hasattr(current, "strip"):
                         text_content = str(current).strip()
                         if text_content and len(text_content) > 1:
                             role_parts.append(text_content)
 
                     # Handle element nodes
-                    elif hasattr(current, 'name') and current.name:
+                    elif hasattr(current, "name") and current.name:
                         # Stop if we hit another <hr> tag
-                        if current.name == 'hr':
+                        if current.name == "hr":
                             break
 
                         # Extract text from elements, including links
-                        if current.name == 'a':
+                        if current.name == "a":
                             link_text = current.get_text(strip=True)
                             if link_text:
                                 role_parts.append(link_text)
-                        elif hasattr(current, 'get_text'):
+                        elif hasattr(current, "get_text"):
                             element_text = current.get_text(strip=True)
                             if element_text and len(element_text) > 1:
                                 role_parts.append(element_text)
@@ -258,12 +258,12 @@ class InterfaceIndexScraper:
             # Process collected role parts
             if role_parts:
                 role = " ".join(role_parts).strip()
-                role = re.sub(r'\s+', ' ', role)
-                role = re.sub(r'^[:\s]+', '', role)
+                role = re.sub(r"\s+", " ", role)
+                role = re.sub(r"^[:\s]+", "", role)
 
                 if role and len(role) > 15:
-                    if not role.endswith('.'):
-                        role += '.'
+                    if not role.endswith("."):
+                        role += "."
                     return role
 
             return ""
@@ -279,7 +279,7 @@ class InterfaceIndexScraper:
         """
         try:
             # Find all <hr> tags
-            hr_tags = soup.find_all('hr')
+            hr_tags = soup.find_all("hr")
 
             if len(hr_tags) < 2:
                 return ""
@@ -293,13 +293,16 @@ class InterfaceIndexScraper:
             current = first_hr.next_sibling
 
             while current and current != second_hr:
-                if hasattr(current, 'name'):
+                if hasattr(current, "name"):
                     # Extract text from <b> and <i> tags
-                    if current.name in ['b', 'i']:
+                    if current.name in ["b", "i"]:
                         text = current.get_text(strip=True)
                         if text and len(text) > 3:
                             # Skip if it's the Role marker
-                            if not (current.name == 'b' and text.lower() in ['role:', 'role']):
+                            if not (
+                                current.name == "b"
+                                and text.lower() in ["role:", "role"]
+                            ):
                                 description_parts.append(text)
 
                 current = current.next_sibling
@@ -308,16 +311,18 @@ class InterfaceIndexScraper:
                 description = " ".join(description_parts).strip()
 
                 # Filter out reference items that might truncate the description
-                if "(" in description and description.count("(") == description.count(")"):
+                if "(" in description and description.count("(") == description.count(
+                    ")"
+                ):
                     # Remove reference items in parentheses like "(see AnyObject)"
-                    description = re.sub(r'\s*\([^)]*\)\s*', ' ', description)
+                    description = re.sub(r"\s*\([^)]*\)\s*", " ", description)
 
                 # Clean up spacing
-                description = re.sub(r'\s+', ' ', description).strip()
+                description = re.sub(r"\s+", " ", description).strip()
 
                 # Ensure it ends with a period if it doesn't already
-                if description and not description.endswith('.'):
-                    description += '.'
+                if description and not description.endswith("."):
+                    description += "."
 
                 return description
 
@@ -336,19 +341,22 @@ class InterfaceIndexScraper:
 
         try:
             # Find PropertyIndex anchor
-            prop_anchor = soup.find('a', {'name': 'PropertyIndex'})
+            prop_anchor = soup.find("a", {"name": "PropertyIndex"})
             if prop_anchor:
                 # Start from the parent (h2 heading) and look for dt elements directly
                 current = prop_anchor.parent
                 sibling = current.next_sibling
 
                 while sibling:
-                    if hasattr(sibling, 'name') and sibling.name == 'dt':
+                    if hasattr(sibling, "name") and sibling.name == "dt":
                         dt_text = sibling.get_text(strip=True)
 
                         # Use regex to find all property patterns in the dt text
                         # Pattern: PropertyName followed by Returns/Sets/Gets
-                        property_matches = re.finditer(r'([A-Za-z][A-Za-z0-9_]*)(Returns?|Sets?|Gets?[^A-Z]*?)(?=[A-Z][a-z]+(?:Returns?|Sets?|Gets?)|$)', dt_text)
+                        property_matches = re.finditer(
+                            r"([A-Za-z][A-Za-z0-9_]*)(Returns?|Sets?|Gets?[^A-Z]*?)(?=[A-Z][a-z]+(?:Returns?|Sets?|Gets?)|$)",
+                            dt_text,
+                        )
 
                         for match in property_matches:
                             property_name = match.group(1)
@@ -360,27 +368,32 @@ class InterfaceIndexScraper:
 
                             # Look for the next property name to determine where this description ends
                             remaining_text = dt_text[end_pos:]
-                            next_prop_match = re.search(r'[A-Z][a-z]+(?:Returns?|Sets?|Gets?)', remaining_text)
+                            next_prop_match = re.search(
+                                r"[A-Z][a-z]+(?:Returns?|Sets?|Gets?)", remaining_text
+                            )
 
                             if next_prop_match:
                                 # Description continues until the next property
-                                description = dt_text[start_pos + len(property_name):end_pos + next_prop_match.start()]
+                                description = dt_text[
+                                    start_pos
+                                    + len(property_name) : end_pos
+                                    + next_prop_match.start()
+                                ]
                             else:
                                 # Description continues to the end
-                                description = dt_text[start_pos + len(property_name):]
+                                description = dt_text[start_pos + len(property_name) :]
 
                             # Clean up description
-                            description = re.sub(r'\s+', ' ', description).strip()
+                            description = re.sub(r"\s+", " ", description).strip()
 
-                            properties.append({
-                                'name': property_name,
-                                'description': description
-                            })
+                            properties.append(
+                                {"name": property_name, "description": description}
+                            )
 
                         # If the regex approach didn't work well, try a simpler text-splitting approach
                         if not properties:
                             # Split by common property description words and try to extract property names
-                            lines = dt_text.replace('.', '.\n').split('\n')
+                            lines = dt_text.replace(".", ".\n").split("\n")
                             current_property = None
                             current_description = []
 
@@ -390,19 +403,28 @@ class InterfaceIndexScraper:
                                     continue
 
                                 # Check if line starts with a property name pattern
-                                prop_match = re.match(r'^([A-Za-z][A-Za-z0-9_]*)(Returns?|Sets?|Gets?)', line)
+                                prop_match = re.match(
+                                    r"^([A-Za-z][A-Za-z0-9_]*)(Returns?|Sets?|Gets?)",
+                                    line,
+                                )
                                 if prop_match:
                                     # Save previous property if exists
                                     if current_property:
-                                        description = ' '.join(current_description).strip()
-                                        properties.append({
-                                            'name': current_property,
-                                            'description': description
-                                        })
+                                        description = " ".join(
+                                            current_description
+                                        ).strip()
+                                        properties.append(
+                                            {
+                                                "name": current_property,
+                                                "description": description,
+                                            }
+                                        )
 
                                     # Start new property
                                     current_property = prop_match.group(1)
-                                    current_description = [line[len(current_property):].strip()]
+                                    current_description = [
+                                        line[len(current_property) :].strip()
+                                    ]
                                 else:
                                     # Continue description for current property
                                     if current_property:
@@ -410,50 +432,60 @@ class InterfaceIndexScraper:
 
                             # Don't forget the last property
                             if current_property:
-                                description = ' '.join(current_description).strip()
-                                properties.append({
-                                    'name': current_property,
-                                    'description': description
-                                })
+                                description = " ".join(current_description).strip()
+                                properties.append(
+                                    {
+                                        "name": current_property,
+                                        "description": description,
+                                    }
+                                )
 
                         break  # We found the main dt element
 
-                    elif hasattr(sibling, 'name') and sibling.name in ['h2', 'h3']:
+                    elif hasattr(sibling, "name") and sibling.name in ["h2", "h3"]:
                         # Stop if we hit another section heading
                         section_text = sibling.get_text(strip=True)
-                        if 'Method Index' in section_text:
+                        if "Method Index" in section_text:
                             break
 
                     sibling = sibling.next_sibling
 
             # Fallback: Try the original dl-based approach for interfaces with different structure
             if not properties:
-                prop_anchor = soup.find('a', {'name': 'PropertyIndex'})
+                prop_anchor = soup.find("a", {"name": "PropertyIndex"})
                 if prop_anchor:
                     current = prop_anchor
                     while current:
                         current = current.next_sibling
-                        if hasattr(current, 'name') and current.name == 'dl':
-                            dt_elements = current.find_all('dt')
+                        if hasattr(current, "name") and current.name == "dl":
+                            dt_elements = current.find_all("dt")
                             for dt in dt_elements:
-                                link = dt.find('a')
+                                link = dt.find("a")
                                 if link:
                                     property_name = link.get_text(strip=True)
                                     if property_name and len(property_name) > 1:
                                         # Find description
-                                        dd = dt.find_next_sibling('dd')
+                                        dd = dt.find_next_sibling("dd")
                                         if dd:
                                             description = dd.get_text(strip=True)
-                                            description = re.sub(r'\s+', ' ', description)
+                                            description = re.sub(
+                                                r"\s+", " ", description
+                                            )
                                         else:
                                             description = ""
 
-                                        properties.append({
-                                            'name': property_name,
-                                            'description': description
-                                        })
+                                        properties.append(
+                                            {
+                                                "name": property_name,
+                                                "description": description,
+                                            }
+                                        )
                             break
-                        elif hasattr(current, 'name') and current.name in ['hr', 'h2', 'h3']:
+                        elif hasattr(current, "name") and current.name in [
+                            "hr",
+                            "h2",
+                            "h3",
+                        ]:
                             break
 
             properties = properties[:15]  # Reasonable limit
@@ -464,10 +496,12 @@ class InterfaceIndexScraper:
         logger.info(f"Found {len(properties)} properties using HTML approach")
 
         return {
-            'properties': properties,
-            'count': len(properties),
-            'property_names': [prop['name'] for prop in properties],
-            'property_index': ", ".join([prop['name'] for prop in properties]) if properties else None
+            "properties": properties,
+            "count": len(properties),
+            "property_names": [prop["name"] for prop in properties],
+            "property_index": (
+                ", ".join([prop["name"] for prop in properties]) if properties else None
+            ),
         }
 
     def extract_methods(self, soup: BeautifulSoup) -> Dict[str, any]:
@@ -479,51 +513,63 @@ class InterfaceIndexScraper:
 
         try:
             # Find MethodIndex anchor
-            method_anchor = soup.find('a', {'name': 'MethodIndex'})
+            method_anchor = soup.find("a", {"name": "MethodIndex"})
             if method_anchor:
                 # Start from the parent (h2 heading) and look for dt elements directly
                 current = method_anchor.parent
                 sibling = current.next_sibling
 
                 while sibling:
-                    if hasattr(sibling, 'name') and sibling.name == 'dt':
+                    if hasattr(sibling, "name") and sibling.name == "dt":
                         dt_text = sibling.get_text(strip=True)
-                        
+
                         # Use regex to find all method patterns in the dt text
                         # Pattern: MethodName followed by description
-                        method_matches = re.finditer(r'([A-Za-z][A-Za-z0-9_]*)((?:Returns?|Sets?|Gets?|Creates?|Adds?|Removes?|Modifies?)[^A-Z]*?)(?=[A-Z][a-z]+(?:Returns?|Sets?|Gets?|Creates?|Adds?|Removes?|Modifies?)|$)', dt_text)
+                        method_matches = re.finditer(
+                            r"([A-Za-z][A-Za-z0-9_]*)((?:Returns?|Sets?|Gets?|Creates?|Adds?|Removes?|Modifies?)[^A-Z]*?)(?=[A-Z][a-z]+(?:Returns?|Sets?|Gets?|Creates?|Adds?|Removes?|Modifies?)|$)",
+                            dt_text,
+                        )
 
                         for match in method_matches:
                             method_name = match.group(1).strip()
                             method_desc = match.group(2).strip()
-                            
+
                             if method_name and len(method_name) > 1:
-                                methods.append({
-                                    'name': method_name,
-                                    'description': method_desc
-                                })
+                                methods.append(
+                                    {"name": method_name, "description": method_desc}
+                                )
 
                         # If the regex approach didn't work well, try a simpler text-splitting approach
                         if not methods:
-                            lines = dt_text.split('.')
+                            lines = dt_text.split(".")
                             current_method = None
                             current_desc = []
-                            
+
                             for line in lines:
                                 line = line.strip()
                                 if line:
                                     # Check if this line starts with a method name (uppercase letter)
-                                    method_match = re.match(r'^([A-Z][A-Za-z0-9_]*)\s*(.*)', line)
+                                    method_match = re.match(
+                                        r"^([A-Z][A-Za-z0-9_]*)\s*(.*)", line
+                                    )
                                     if method_match:
                                         # Save previous method if exists
                                         if current_method:
-                                            methods.append({
-                                                'name': current_method,
-                                                'description': ' '.join(current_desc).strip()
-                                            })
-                                        
+                                            methods.append(
+                                                {
+                                                    "name": current_method,
+                                                    "description": " ".join(
+                                                        current_desc
+                                                    ).strip(),
+                                                }
+                                            )
+
                                         current_method = method_match.group(1)
-                                        current_desc = [method_match.group(2)] if method_match.group(2) else []
+                                        current_desc = (
+                                            [method_match.group(2)]
+                                            if method_match.group(2)
+                                            else []
+                                        )
                                     else:
                                         # This is part of the description
                                         if current_method:
@@ -531,45 +577,56 @@ class InterfaceIndexScraper:
 
                             # Don't forget the last method
                             if current_method:
-                                methods.append({
-                                    'name': current_method,
-                                    'description': ' '.join(current_desc).strip()
-                                })
+                                methods.append(
+                                    {
+                                        "name": current_method,
+                                        "description": " ".join(current_desc).strip(),
+                                    }
+                                )
 
                         break  # We found the main dt element
 
-                    elif hasattr(sibling, 'name') and sibling.name in ['h2', 'h3']:
+                    elif hasattr(sibling, "name") and sibling.name in ["h2", "h3"]:
                         # Stop if we hit another section heading
                         section_text = sibling.get_text(strip=True)
-                        if any(keyword in section_text for keyword in ['Property Index', 'Example', 'Returns']):
+                        if any(
+                            keyword in section_text
+                            for keyword in ["Property Index", "Example", "Returns"]
+                        ):
                             break
 
                     sibling = sibling.next_sibling
 
             # Fallback: Try the original dl-based approach for interfaces with different structure
             if not methods:
-                method_anchor = soup.find('a', {'name': 'MethodIndex'})
+                method_anchor = soup.find("a", {"name": "MethodIndex"})
                 if method_anchor:
                     current = method_anchor
                     while current:
                         current = current.next_sibling
-                        if hasattr(current, 'name') and current.name == 'dl':
-                            dt_elements = current.find_all('dt')
+                        if hasattr(current, "name") and current.name == "dl":
+                            dt_elements = current.find_all("dt")
                             for dt in dt_elements:
-                                link = dt.find('a')
+                                link = dt.find("a")
                                 if link:
                                     method_name = link.get_text(strip=True)
                                     # Get description from following dd element
-                                    dd = dt.find_next_sibling('dd')
+                                    dd = dt.find_next_sibling("dd")
                                     method_desc = dd.get_text(strip=True) if dd else ""
-                                    
+
                                     if method_name and len(method_name) > 1:
-                                        methods.append({
-                                            'name': method_name,
-                                            'description': method_desc
-                                        })
+                                        methods.append(
+                                            {
+                                                "name": method_name,
+                                                "description": method_desc,
+                                            }
+                                        )
                             break
-                        elif hasattr(current, 'name') and current.name in ['hr', 'h2', 'h3']:
+                        elif hasattr(current, "name") and current.name in [
+                            "hr",
+                            "h2",
+                            "h3",
+                        ]:
                             break
 
             methods = methods[:20]  # Reasonable limit
@@ -580,10 +637,12 @@ class InterfaceIndexScraper:
         logger.info(f"Found {len(methods)} methods using HTML approach")
 
         return {
-            'methods': methods,
-            'count': len(methods),
-            'method_names': [method['name'] for method in methods],
-            'method_index': ", ".join([method['name'] for method in methods]) if methods else None
+            "methods": methods,
+            "count": len(methods),
+            "method_names": [method["name"] for method in methods],
+            "method_index": (
+                ", ".join([method["name"] for method in methods]) if methods else None
+            ),
         }
 
     def scrape_interface_details(
@@ -621,10 +680,18 @@ class InterfaceIndexScraper:
                 "description": description,
                 "hierarchy": json.dumps(hierarchy),
                 "role": role,
-                "property_index": properties_data['property_index'],
-                "properties_detailed": json.dumps(properties_data['properties']) if properties_data['properties'] else None,
-                "method_index": methods_data['method_index'],
-                "methods_detailed": json.dumps(methods_data['methods']) if methods_data['methods'] else None,
+                "property_index": properties_data["property_index"],
+                "properties_detailed": (
+                    json.dumps(properties_data["properties"])
+                    if properties_data["properties"]
+                    else None
+                ),
+                "method_index": methods_data["method_index"],
+                "methods_detailed": (
+                    json.dumps(methods_data["methods"])
+                    if methods_data["methods"]
+                    else None
+                ),
                 "url": url,
                 "is_collection": is_collection,
             }
@@ -651,7 +718,9 @@ class InterfaceIndexScraper:
             if (i + 1) % 50 == 0:
                 logger.info(f"Processed {i + 1} interfaces, saving progress...")
 
-        logger.info(f"Completed scraping. Successfully processed {len(results)} interfaces.")
+        logger.info(
+            f"Completed scraping. Successfully processed {len(results)} interfaces."
+        )
         return results
 
     def save_to_database(self, interfaces: List[Dict[str, any]]):
@@ -664,69 +733,90 @@ class InterfaceIndexScraper:
 def main():
     """Main execution function."""
     scraper = InterfaceIndexScraper()
-    
+
     # Discover all interface URLs
     print("🔍 Discovering interface URLs...")
     interfaces = scraper.discover_interface_urls()
-    
+
     if not interfaces:
         print("❌ No interfaces found!")
         return
-    
+
     print(f"✅ Found {len(interfaces)} interfaces")
-    
-    # Scrape the first 10 interfaces
-    first_10_interfaces = interfaces[:10]
-    print(f"\n🚀 Scraping first {len(first_10_interfaces)} interfaces...")
+
+    # Scrape all discovered interfaces
+    print(f"\n🚀 Scraping all {len(interfaces)} interfaces...")
     print("=" * 60)
-    
+
     results = []
-    for i, interface_info in enumerate(first_10_interfaces, 1):
+    saved_count = 0
+    for i, interface_info in enumerate(interfaces, 1):
         print(f"\n{i}. Scraping: {interface_info['name']}")
         print("-" * 40)
-        
+
         try:
             result = scraper.scrape_interface_details(interface_info)
             if result:
                 results.append(result)
-                print(f"✅ Success: {result['name']}")
+
+                # Save to database immediately after processing each interface
+                try:
+                    scraper.db_handler.store_interface(result)
+                    saved_count += 1
+                    print(f"✅ Success: {result['name']} (Saved to DB)")
+                except Exception as db_error:
+                    print(
+                        f"✅ Success: {result['name']} (❌ DB Save Failed: {db_error})"
+                    )
+
                 print(f"   Type: {result['type']}")
                 print(f"   Properties: {result.get('property_index', 'None')}")
                 print(f"   Methods: {result.get('method_index', 'None')}")
-                if result.get('hierarchy'):
-                    hierarchy = json.loads(result['hierarchy'])
-                    print(f"   Hierarchy: {' → '.join(hierarchy[-3:])}")  # Show last 3 levels
+                if result.get("hierarchy"):
+                    hierarchy = json.loads(result["hierarchy"])
+                    print(
+                        f"   Hierarchy: {' → '.join(hierarchy[-3:])}"
+                    )  # Show last 3 levels
+
+                # Show progress every 10 interfaces
+                if i % 10 == 0:
+                    print(
+                        f"\n📊 Progress Update: {i}/{len(interfaces)} processed, {saved_count} saved to database"
+                    )
+
             else:
                 print(f"❌ Failed to scrape {interface_info['name']}")
-                
+
         except Exception as e:
             print(f"❌ Error scraping {interface_info['name']}: {e}")
-    
+
     print("\n" + "=" * 60)
     print("📊 SUMMARY")
     print("=" * 60)
-    print(f"✅ Successfully scraped: {len(results)}/{len(first_10_interfaces)} interfaces")
-    
-    total_properties = sum(len(json.loads(r.get('properties_detailed', '[]'))) for r in results if r.get('properties_detailed'))
-    total_methods = sum(len(json.loads(r.get('methods_detailed', '[]'))) for r in results if r.get('methods_detailed'))
-    
+    print(f"✅ Successfully scraped: {len(results)}/{len(interfaces)} interfaces")
+    print(f"💾 Successfully saved to database: {saved_count}/{len(results)} interfaces")
+
+    total_properties = sum(
+        len(json.loads(r.get("properties_detailed", "[]")))
+        for r in results
+        if r.get("properties_detailed")
+    )
+    total_methods = sum(
+        len(json.loads(r.get("methods_detailed", "[]")))
+        for r in results
+        if r.get("methods_detailed")
+    )
+
     print(f"📝 Total properties extracted: {total_properties}")
     print(f"🛠️  Total methods extracted: {total_methods}")
-    
+
     if results:
         avg_props = total_properties / len(results)
         avg_methods = total_methods / len(results)
-        print(f"📈 Average per interface: {avg_props:.1f} properties, {avg_methods:.1f} methods")
-    
-    # Optionally save to database
-    if results:
-        print(f"\n💾 Saving {len(results)} interfaces to database...")
-        try:
-            scraper.save_to_database(results)
-            print("✅ Successfully saved to database!")
-        except Exception as e:
-            print(f"❌ Error saving to database: {e}")
-    
+        print(
+            f"📈 Average per interface: {avg_props:.1f} properties, {avg_methods:.1f} methods"
+        )
+
     print("\n🎉 Scraping completed!")
 
 

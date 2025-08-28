@@ -1,10 +1,24 @@
-# Core dependencies for CATIA documentation scraping
+# Core dependencies for enhanced CATIA V5 interface documentation scraping
+# Production requirements for v2.0.0+ with HTML parsing and database optimization
+
+# HTTP client for web scraping
 requests>=2.31.0
+
+# HTML parsing and extraction
 beautifulsoup4>=4.12.0
-sqlalchemy>=2.0.0
-pyyaml>=6.0.0
 lxml>=4.9.0
 
+# Database ORM and management
+sqlalchemy>=2.0.0
+
+# Configuration file handling
+pyyaml>=6.0.0
+
+# Additional utilities
+# json (built-in Python module)
+# re (built-in Python module)
+# logging (built-in Python module)
+
 # Development dependencies (optional)
-# Install with: pip install -r requirements.txt -r requirements-dev.txt
-# Or use: pip install -e ".[dev]" if you have pyproject.toml
+# Install development tools with: pip install -e ".[dev]"
+# Or separately: pip install pytest pytest-cov black flake8 mypy

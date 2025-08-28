@@ -1,30 +1,32 @@
-# CATIA Documentation Scraper
+# CATIA V5 Interface Documentation Scraper
 
-A comprehensive Python system for scraping and extracting CATIA V5 documentation, creating a searchable knowledge base of interfaces, methods, and properties.
+A comprehensive Python system for scraping and extracting CATIA V5 interface documentation, creating a searchable knowledge base with enhanced HTML-based extraction techniques.
 
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Overview
 
-This project provides a sophisticated web scraping system that extracts comprehensive CATIA V5 interface documentation from online sources. It captures detailed information about:
+This project provides an advanced web scraping system that extracts comprehensive CATIA V5 interface documentation from http://catiadoc.free.fr/. Using sophisticated HTML parsing and pattern recognition, it captures detailed information about:
 
-- **Interfaces** with complete inheritance hierarchies
-- **Properties** with full type information and access modes
-- **Methods** with signatures, parameters, and return types
+- **Interfaces** with complete inheritance hierarchies and type information
+- **Properties** with detailed descriptions, types, and access patterns  
+- **Methods** with comprehensive signatures, parameters, and return types
 - **Collections** and their relationships
+- **Hierarchical relationships** with full inheritance chains
 
-The scraped data is stored in a SQLite database and accessed through a clean Python API for integration with other tools and workflows.
+The scraped data is stored in an optimized SQLite database with property and method counts for efficient querying and analysis.
 
-## Features
+## Key Features
 
-- 🔍 **Comprehensive Extraction**: Captures all interface details without data loss
-- 🏗️ **Complete Inheritance**: Reconstructs full inheritance chains from documentation
-- 📊 **Type-Aware**: Extracts property types from JavaScript `activateLink()` calls
-- 🗄️ **Database Storage**: SQLite backend with SQLAlchemy ORM
-- 🔗 **Clean API**: Easy-to-use query interface for accessing scraped data
-- ⚡ **Dual Processing**: Test mode (limited) and full mode (comprehensive)
-- 📈 **Progress Tracking**: Detailed logging and progress reporting
+- 🔍 **Enhanced HTML Extraction**: Advanced BeautifulSoup-based parsing with pattern recognition
+- 🏗️ **Complete Inheritance Mapping**: Reconstructs full inheritance chains from documentation
+- 📊 **Smart Type Detection**: Extracts property types from JavaScript `activateLink()` calls and HTML content
+- 🗄️ **Optimized Database**: SQLite backend with count columns and performance indexes
+- 🔗 **Clean Python API**: Easy-to-use SQLAlchemy-based interface for data access
+- ⚡ **Full-Scale Processing**: Processes all ~993 discovered CATIA interfaces
+- 📈 **Progress Tracking**: Detailed logging with statistics and error reporting
+- 🛠️ **Robust Error Handling**: Graceful handling of malformed HTML and network issues
 
 ## Installation
 
@@ -64,114 +66,128 @@ pip install -r requirements.txt
 ### 1. Scrape CATIA Documentation
 
 ```bash
-# Run full scraping (recommended for first time)
-python scraping/crawler.py --full
+# Run the enhanced interface scraper (scrapes all ~993 interfaces)
+python scraping/interface_index_scraper.py
 
-# Or run in test mode (first 10 interfaces)
-python scraping/crawler.py --test
+# The scraper will automatically:
+# - Discover all available CATIA interfaces
+# - Extract detailed properties and methods using HTML parsing
+# - Save results to SQLite database with count statistics
+# - Provide progress tracking and summary statistics
 ```
 
 ### 2. Query the Database
 
 ```python
-from scraping.query_interface import CATIAKnowledgeBase
+from scraping.db_handler import KnowledgeBaseHandler
 
 # Initialize the knowledge base
-kb = CATIAKnowledgeBase()
-
-# Search for interfaces
-results = kb.search_interfaces("ABQAnalysisCase")
-print(f"Found {len(results)} interfaces")
-
-# Get detailed interface information
-details = kb.get_interface_details("ABQAnalysisCase")
-print(f"Interface: {details['name']}")
-print(f"Properties: {len(details['properties'])}")
-print(f"Methods: {len(details['methods'])}")
+handler = KnowledgeBaseHandler()
 
 # Get database statistics
-stats = kb.get_statistics()
+stats = handler.get_database_stats()
 print(f"Total interfaces: {stats['total_interfaces']}")
-print(f"Total properties: {stats['total_properties']}")
-print(f"Total methods: {stats['total_methods']}")
+print(f"Average properties per interface: {stats['avg_properties']:.1f}")
+print(f"Average methods per interface: {stats['avg_methods']:.1f}")
+
+# Search for interfaces
+interfaces = handler.search_interfaces("Analysis")
+for interface in interfaces:
+    print(f"- {interface.name}: {interface.property_count} properties, {interface.method_count} methods")
+
+# Get specific interface details
+interface = handler.get_interface_by_name("ABQAnalysisCase")
+if interface:
+    properties = json.loads(interface.properties_detailed)
+    methods = json.loads(interface.methods_detailed)
+    print(f"Interface: {interface.name}")
+    print(f"Properties: {len(properties)}")
+    print(f"Methods: {len(methods)}")
 ```
 
 ## Project Structure
 
-```
+```text
 Project_CAD/
-├── scraping/                 # Core scraping package
-│   ├── complete_scraper.py   # Main scraper implementation
-│   ├── crawler.py           # Entry point and orchestration
-│   ├── db_handler.py        # Database operations
-│   ├── models.py            # SQLAlchemy database models
-│   ├── query_interface.py   # API for accessing scraped data
-│   └── README.md            # Package documentation
-├── config/                  # Configuration files
-│   ├── catia_config.yaml   # CATIA-specific settings
-│   └── config.yaml         # General configuration
-├── data/                    # Data storage
-│   ├── cad_manuals/        # Source documentation
-│   └── output_parts/       # Generated outputs
-├── database/               # SQLite database storage
-│   └── knowledge.db        # Main knowledge base
-├── docs/                   # Project documentation
-├── tests/                  # Test suite
-├── pyproject.toml         # Modern Python packaging
-├── requirements.txt       # Dependencies
-└── README.md             # This file
+├── scraping/                     # Core scraping package
+│   ├── interface_index_scraper.py  # Enhanced HTML-based interface scraper
+│   ├── db_handler.py            # Database operations and queries
+│   ├── models.py                # SQLAlchemy models with count columns
+│   └── README.md                # Package documentation
+├── config/                      # Configuration files
+│   ├── catia_config.yaml       # CATIA-specific settings
+│   └── config.yaml             # General configuration
+├── data/                        # Data storage
+│   ├── cad_manuals/            # Source documentation
+│   └── output_parts/           # Generated outputs
+├── database/                   # SQLite database storage
+│   └── knowledge_new.db        # Enhanced knowledge base with count statistics
+├── docs/                       # Project documentation
+│   ├── project_summary.md      # Technical overview
+│   ├── research_notes.md       # Development notes
+│   └── diagrams/               # Architecture diagrams
+├── tests/                      # Test suite
+│   └── mock_data/              # Test data and fixtures
+├── pyproject.toml             # Modern Python packaging configuration
+├── requirements.txt           # Production dependencies
+├── setup.py                   # Legacy setuptools configuration
+└── README.md                  # This file
 ```
 
 ## API Reference
 
-### CATIAKnowledgeBase Class
+### KnowledgeBaseHandler Class
 
-The main interface for querying the scraped CATIA documentation.
+The main interface for querying the scraped CATIA documentation database.
 
-#### Methods
+#### Core Methods
 
-##### `search_interfaces(query: str) -> List[Dict]`
-Search for interfaces by name or description.
+##### `get_database_stats() -> Dict`
+
+Get comprehensive database statistics including counts and averages.
 
 ```python
-results = kb.search_interfaces("Analysis")
+from scraping.db_handler import KnowledgeBaseHandler
+
+handler = KnowledgeBaseHandler()
+stats = handler.get_database_stats()
+print(f"Total interfaces: {stats['total_interfaces']}")
+print(f"Total properties: {stats['total_properties']}")
+print(f"Average properties per interface: {stats['avg_properties']:.1f}")
+```
+
+##### `search_interfaces(query: str) -> List[Interface]`
+
+Search for interfaces by name using partial matching.
+
+```python
+results = handler.search_interfaces("Analysis")
 for interface in results:
-    print(f"- {interface['name']}: {interface['description']}")
+    print(f"- {interface.name}: {interface.property_count} properties")
 ```
 
-##### `get_interface_details(interface_name: str) -> Optional[Dict]`
-Get comprehensive details about a specific interface.
+##### `get_interface_by_name(name: str) -> Optional[Interface]`
+
+Get detailed information about a specific interface.
 
 ```python
-details = kb.get_interface_details("ABQAnalysisCase")
-print(f"Parent: {details['parent_interface']}")
-print(f"URL: {details['url']}")
-
-# Access properties
-for prop in details['properties']:
-    print(f"  Property: {prop['name']} ({prop['type']})")
-
-# Access methods
-for method in details['methods']:
-    print(f"  Method: {method['name']} -> {method['return_type']}")
+interface = handler.get_interface_by_name("ABQAnalysisCase")
+if interface:
+    print(f"Type: {interface.type}")
+    print(f"URL: {interface.url}")
+    properties = json.loads(interface.properties_detailed)
+    methods = json.loads(interface.methods_detailed)
+    print(f"Properties: {len(properties)}")
+    print(f"Methods: {len(methods)}")
 ```
 
-##### `get_interface_methods(interface_name: str) -> List[Dict]`
-Get all methods for a specific interface.
+##### `get_all_interfaces() -> List[Interface]`
 
-##### `get_interface_properties(interface_name: str) -> List[Dict]`
-Get all properties for a specific interface.
+Retrieve all interfaces from the database.
 
-##### `get_statistics() -> Dict`
-Get database statistics and overview.
+##### `store_interface(interface_data: Dict) -> None`
 
-```python
-stats = kb.get_statistics()
-print(f"Database contains:")
-print(f"  - {stats['total_interfaces']} interfaces")
-print(f"  - {stats['total_properties']} properties")
-print(f"  - {stats['total_methods']} methods")
-```
+Store a new interface in the database with automatic count calculation.
 
 ## Configuration
 
@@ -215,40 +231,52 @@ logging:
 ### Custom Scraping
 
 ```python
-from scraping.complete_scraper import CompleteCATIAScraper
+from scraping.interface_index_scraper import InterfaceIndexScraper
 from scraping.db_handler import KnowledgeBaseHandler
 
 # Initialize components
-scraper = CompleteCATIAScraper()
-db_handler = KnowledgeBaseHandler()
+scraper = InterfaceIndexScraper()
+handler = KnowledgeBaseHandler()
 
 # Discover all interface URLs
-urls = scraper.discover_interface_urls()
-print(f"Found {len(urls)} interfaces to scrape")
+interface_urls = scraper.discover_interface_urls()
+print(f"Found {len(interface_urls)} interfaces to scrape")
 
 # Scrape specific interface
-interface_data = scraper.scrape_interface("http://catiadoc.free.fr/online/interfaces/interface_ABQAnalysisCase.htm")
+interface_data = scraper.scrape_interface_details({
+    'url': 'http://catiadoc.free.fr/online/interfaces/interface_ABQAnalysisCase.htm',
+    'name': 'ABQAnalysisCase'
+})
 print(f"Scraped: {interface_data['name']}")
 
 # Store in database
-db_handler.store_interface(interface_data)
+handler.store_interface(interface_data)
 ```
 
 ### Database Direct Access
 
 ```python
 from scraping.db_handler import KnowledgeBaseHandler
+import json
 
 handler = KnowledgeBaseHandler()
 
-# Raw database queries
+# Get all interfaces with detailed information
 interfaces = handler.get_all_interfaces()
 for interface in interfaces:
-    print(f"{interface.name}: {len(interface.properties)} properties")
+    print(f"{interface.name}: {interface.property_count} properties, {interface.method_count} methods")
 
 # Search with custom filters
 matching = handler.search_interfaces("Step")
 print(f"Found {len(matching)} interfaces containing 'Step'")
+
+# Access detailed property and method data
+interface = handler.get_interface_by_name("ABQAnalysisCase")
+if interface:
+    properties = json.loads(interface.properties_detailed)
+    methods = json.loads(interface.methods_detailed)
+    print(f"First property: {properties[0]['name']}")
+    print(f"First method: {methods[0]['name']}")
 ```
 
 ## Development
@@ -292,64 +320,74 @@ mypy scraping/
 ### Example 1: Find All Analysis-Related Interfaces
 
 ```python
-from scraping.query_interface import CATIAKnowledgeBase
+from scraping.db_handler import KnowledgeBaseHandler
+import json
 
-kb = CATIAKnowledgeBase()
+handler = KnowledgeBaseHandler()
 
 # Search for analysis interfaces
-analysis_interfaces = kb.search_interfaces("Analysis")
+analysis_interfaces = handler.search_interfaces("Analysis")
 
 for interface in analysis_interfaces:
-    details = kb.get_interface_details(interface['name'])
-    print(f"\n=== {interface['name']} ===")
-    print(f"Description: {interface['description']}")
-    print(f"Properties: {len(details['properties'])}")
-    print(f"Methods: {len(details['methods'])}")
+    print(f"\n=== {interface.name} ===")
+    print(f"Type: {interface.type}")
+    print(f"Properties: {interface.property_count}")
+    print(f"Methods: {interface.method_count}")
 
     # Show first few properties
-    for prop in details['properties'][:3]:
-        access = "Read-only" if prop['readonly'] else "Read/Write"
-        print(f"  - {prop['name']} ({prop['type']}) - {access}")
+    if interface.properties_detailed:
+        properties = json.loads(interface.properties_detailed)
+        for prop in properties[:3]:
+            print(f"  - {prop['name']}: {prop.get('description', 'No description')}")
 ```
 
 ### Example 2: Export Interface Documentation
 
 ```python
 import json
-from scraping.query_interface import CATIAKnowledgeBase
+from scraping.db_handler import KnowledgeBaseHandler
 
-kb = CATIAKnowledgeBase()
+handler = KnowledgeBaseHandler()
 
 # Export specific interface to JSON
 interface_name = "ABQAnalysisCase"
-details = kb.get_interface_details(interface_name)
+interface = handler.get_interface_by_name(interface_name)
 
-if details:
+if interface:
+    export_data = {
+        'name': interface.name,
+        'type': interface.type,
+        'url': interface.url,
+        'hierarchy': json.loads(interface.hierarchy) if interface.hierarchy else [],
+        'properties': json.loads(interface.properties_detailed) if interface.properties_detailed else [],
+        'methods': json.loads(interface.methods_detailed) if interface.methods_detailed else [],
+        'property_count': interface.property_count,
+        'method_count': interface.method_count
+    }
+    
     with open(f"{interface_name}_documentation.json", "w") as f:
-        json.dump(details, f, indent=2)
+        json.dump(export_data, f, indent=2)
     print(f"Exported {interface_name} documentation to JSON")
 ```
 
 ### Example 3: Generate Interface Summary Report
 
 ```python
-from scraping.query_interface import CATIAKnowledgeBase
+from scraping.db_handler import KnowledgeBaseHandler
 
-kb = CATIAKnowledgeBase()
-stats = kb.get_statistics()
+handler = KnowledgeBaseHandler()
+stats = handler.get_database_stats()
 
 print("=== CATIA Interface Database Summary ===")
 print(f"Total Interfaces: {stats['total_interfaces']}")
 print(f"Total Properties: {stats['total_properties']}")
 print(f"Total Methods: {stats['total_methods']}")
+print(f"Average Properties per Interface: {stats['avg_properties']:.1f}")
+print(f"Average Methods per Interface: {stats['avg_methods']:.1f}")
 
 # Find interfaces with most properties
-all_interfaces = kb.search_interfaces("")  # Get all
-interface_props = []
-
-for interface in all_interfaces:
-    details = kb.get_interface_details(interface['name'])
-    interface_props.append((interface['name'], len(details['properties'])))
+all_interfaces = handler.get_all_interfaces()
+interface_props = [(interface.name, interface.property_count) for interface in all_interfaces]
 
 # Sort by property count
 interface_props.sort(key=lambda x: x[1], reverse=True)
@@ -361,10 +399,11 @@ for name, prop_count in interface_props[:10]:
 
 ## Performance Notes
 
-- **Initial Scraping**: Full scraping of ~1000 interfaces takes approximately 30-45 minutes
-- **Database Size**: Typical database size is 5-10 MB for complete CATIA documentation
-- **Query Performance**: All queries are optimized with database indexes
-- **Memory Usage**: Scraper uses minimal memory with incremental processing
+- **Initial Scraping**: Full scraping of ~993 interfaces takes approximately 45-60 minutes
+- **Database Size**: Enhanced database with count columns is approximately 8-12 MB for complete CATIA documentation
+- **Query Performance**: All queries are optimized with SQLAlchemy ORM and database indexes
+- **Memory Usage**: Scraper uses minimal memory with incremental processing and batch saving
+- **Extraction Quality**: Enhanced HTML parsing provides significantly better data quality than regex-based methods
 
 ## Troubleshooting
 
@@ -384,7 +423,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 # Run scraper with debug output
-python scraping/crawler.py --full --debug
+python scraping/interface_index_scraper.py
 ```
 
 ## License
