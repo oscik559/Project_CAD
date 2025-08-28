@@ -15,7 +15,12 @@ class KnowledgeBaseHandler:
     """Handler for managing CATIA knowledge base operations."""
 
     def __init__(self):
-        self.db = get_db()
+        from .models import SessionLocal
+        self.SessionLocal = SessionLocal
+
+    def _get_session(self):
+        """Get a new database session."""
+        return self.SessionLocal()
 
     def add_interface(
         self,
@@ -34,29 +39,38 @@ class KnowledgeBaseHandler:
         is_collection: bool = False,
     ) -> Interface:
         """Add a new interface to the knowledge base."""
-        interface = Interface(
-            name=name,
-            type=type,
-            description=description,
-            hierarchy=hierarchy,
-            role=role,
-            property_index=property_index,
-            properties_detailed=properties_detailed,
-            property_count=property_count,
-            method_index=method_index,
-            methods_detailed=methods_detailed,
-            method_count=method_count,
-            url=url,
-            is_collection=is_collection,
-        )
-        self.db.add(interface)
-        self.db.commit()
-        self.db.refresh(interface)
-        logger.info(f"Added interface: {name}")
-        return interface
+        with self._get_session() as db:
+            interface = Interface(
+                name=name,
+                type=type,
+                description=description,
+                hierarchy=hierarchy,
+                role=role,
+                property_index=property_index,
+                properties_detailed=properties_detailed,
+                property_count=property_count,
+                method_index=method_index,
+                methods_detailed=methods_detailed,
+                method_count=method_count,
+                url=url,
+                is_collection=is_collection,
+            )
+            db.add(interface)
+            db.commit()
+            db.refresh(interface)
+            logger.info(f"Added interface: {name}")
+            return interface
 
     def store_interface(self, interface_data: dict) -> Interface:
         """Store interface from dictionary data (used by scraper)."""
+        interface_name = interface_data.get("name")
+        
+        # Check if interface already exists
+        existing_interface = self.get_interface(interface_name)
+        if existing_interface:
+            logger.info(f"Interface {interface_name} already exists, skipping...")
+            return existing_interface
+        
         # Calculate counts from detailed data
         property_count = 0
         if interface_data.get('properties_detailed'):
@@ -74,25 +88,34 @@ class KnowledgeBaseHandler:
             except:
                 method_count = 0
         
-        return self.add_interface(
-            name=interface_data.get("name"),
-            type=interface_data.get("type"),
-            description=interface_data.get("description"),
-            hierarchy=interface_data.get("hierarchy"),
-            role=interface_data.get("role"),
-            property_index=interface_data.get("property_index"),
-            properties_detailed=interface_data.get("properties_detailed"),
-            property_count=property_count,
-            method_index=interface_data.get("method_index"),
-            methods_detailed=interface_data.get("methods_detailed"),
-            method_count=method_count,
-            url=interface_data.get("url"),
-            is_collection=interface_data.get("is_collection", False),
-        )
+        try:
+            return self.add_interface(
+                name=interface_data.get("name"),
+                type=interface_data.get("type"),
+                description=interface_data.get("description"),
+                hierarchy=interface_data.get("hierarchy"),
+                role=interface_data.get("role"),
+                property_index=interface_data.get("property_index"),
+                properties_detailed=interface_data.get("properties_detailed"),
+                property_count=property_count,
+                method_index=interface_data.get("method_index"),
+                methods_detailed=interface_data.get("methods_detailed"),
+                method_count=method_count,
+                url=interface_data.get("url"),
+                is_collection=interface_data.get("is_collection", False),
+            )
+        except Exception as e:
+            logger.error(f"Error storing interface {interface_name}: {e}")
+            raise e
 
     def get_interface(self, name: str) -> Interface:
         """Get interface by name."""
-        return self.db.query(Interface).filter(Interface.name == name).first()
+        with self._get_session() as db:
+            return db.query(Interface).filter(Interface.name == name).first()
+
+    def get_interface_by_name(self, name: str) -> Interface:
+        """Get interface by name (alias for compatibility)."""
+        return self.get_interface(name)
 
 
 
@@ -179,79 +202,65 @@ class KnowledgeBaseHandler:
 
     def search_interfaces(self, query: str) -> list:
         """Search for interfaces by name or description."""
-        return (
-            self.db.query(Interface)
-            .filter(
-                (Interface.name.contains(query))
-                | (Interface.description.contains(query))
+        with self._get_session() as db:
+            return (
+                db.query(Interface)
+                .filter(
+                    (Interface.name.contains(query))
+                    | (Interface.description.contains(query))
+                )
+                .all()
             )
-            .all()
-        )
-
-    def get_interface_methods(self, interface_name: str) -> list:
-        """Get all methods for an interface."""
-        interface = self.get_interface(interface_name)
-        if interface:
-            return interface.methods
-        return []
-
-    def get_interface_properties(self, interface_name: str) -> list:
-        """Get all properties for an interface."""
-        interface = self.get_interface(interface_name)
-        if interface:
-            return interface.properties
-        return []
 
     def get_all_interfaces(self) -> list:
         """Get all interfaces."""
-        return self.db.query(Interface).all()
+        with self._get_session() as db:
+            return db.query(Interface).all()
 
     def get_interface_count(self) -> int:
         """Get total number of interfaces."""
-        return self.db.query(Interface).count()
+        with self._get_session() as db:
+            return db.query(Interface).count()
 
     def get_database_stats(self) -> dict:
         """Get comprehensive database statistics."""
-        stats = {
-            "total_interfaces": self.db.query(Interface).count(),
-            "total_methods": self.db.query(Method).count(),
-            "total_properties": self.db.query(Property).count(),
-            "total_enums": self.db.query(Enum).count(),
-            "total_typedefs": self.db.query(Typedef).count(),
-            "interfaces_with_methods": self.db.query(Interface).filter(Interface.method_index.isnot(None)).count(),
-            "interfaces_with_properties": self.db.query(Interface).filter(Interface.property_index.isnot(None)).count(),
-            "collection_interfaces": self.db.query(Interface).filter(Interface.is_collection == True).count(),
-            "object_interfaces": self.db.query(Interface).filter(Interface.type == "Object").count(),
-            "total_property_count": self.db.query(Interface).with_entities(Interface.property_count).all(),
-            "total_method_count": self.db.query(Interface).with_entities(Interface.method_count).all(),
-        }
-        
-        # Calculate totals from count columns
-        property_counts = [row[0] for row in stats["total_property_count"] if row[0] is not None]
-        method_counts = [row[0] for row in stats["total_method_count"] if row[0] is not None]
-        
-        stats["total_properties_from_count"] = sum(property_counts)
-        stats["total_methods_from_count"] = sum(method_counts)
-        stats["avg_properties_per_interface"] = sum(property_counts) / len(property_counts) if property_counts else 0
-        stats["avg_methods_per_interface"] = sum(method_counts) / len(method_counts) if method_counts else 0
-        
-        # Remove the raw data arrays
-        del stats["total_property_count"]
-        del stats["total_method_count"]
-        
-        return stats
+        with self._get_session() as db:
+            stats = {
+                "total_interfaces": db.query(Interface).count(),
+                "total_methods": db.query(Method).count(),
+                "total_properties": db.query(Property).count(),
+                "total_enums": db.query(Enum).count(),
+                "total_typedefs": db.query(Typedef).count(),
+                "interfaces_with_methods": db.query(Interface).filter(Interface.method_index.isnot(None)).count(),
+                "interfaces_with_properties": db.query(Interface).filter(Interface.property_index.isnot(None)).count(),
+                "collection_interfaces": db.query(Interface).filter(Interface.is_collection == True).count(),
+                "object_interfaces": db.query(Interface).filter(Interface.type == "Object").count(),
+                "total_property_count": db.query(Interface).with_entities(Interface.property_count).all(),
+                "total_method_count": db.query(Interface).with_entities(Interface.method_count).all(),
+            }
+            
+            # Calculate totals from count columns
+            property_counts = [row[0] for row in stats["total_property_count"] if row[0] is not None]
+            method_counts = [row[0] for row in stats["total_method_count"] if row[0] is not None]
+            
+            stats["total_properties_from_count"] = sum(property_counts)
+            stats["total_methods_from_count"] = sum(method_counts)
+            stats["avg_properties_per_interface"] = sum(property_counts) / len(property_counts) if property_counts else 0
+            stats["avg_methods_per_interface"] = sum(method_counts) / len(method_counts) if method_counts else 0
+            
+            # Remove the raw data arrays
+            del stats["total_property_count"]
+            del stats["total_method_count"]
+            
+            return stats
 
     def clear_database(self):
         """Clear all data from the database."""
-        self.db.query(Method).delete()
-        self.db.query(Property).delete()
-        self.db.query(Interface).delete()
-        self.db.query(Enum).delete()
-        self.db.query(Typedef).delete()
-        self.db.commit()
-        logger.info("Database cleared")
-
-    def __del__(self):
-        """Close database session."""
-        if hasattr(self, "db"):
-            self.db.close()
+        with self._get_session() as db:
+            db.query(Method).delete()
+            db.query(Property).delete()
+            db.query(Interface).delete()
+            db.query(Enum).delete()
+            db.query(Typedef).delete()
+            db.commit()
+            logger.info("Database cleared")
