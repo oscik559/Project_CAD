@@ -17,9 +17,17 @@ class Interface(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(255), unique=True, nullable=False)
+    type = Column(String(50))  # Object, Collection, etc.
     description = Column(Text)
+    hierarchy = Column(Text)  # JSON string of inheritance hierarchy
+    role = Column(Text)  # Role description
+    property_index = Column(Text)  # Comma-separated list of property names
+    properties_detailed = Column(Text)  # JSON string of properties with descriptions
+    property_count = Column(Integer, default=0)  # Count of properties
+    method_index = Column(Text)  # Comma-separated list of method names
+    methods_detailed = Column(Text)  # JSON string of methods with descriptions
+    method_count = Column(Integer, default=0)  # Count of methods
     url = Column(String(500))
-    parent_interface = Column(String(255))  # For inheritance
     is_collection = Column(Boolean, default=False)
 
     # Relationships
@@ -90,7 +98,7 @@ class Typedef(Base):
 import os
 
 db_path = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), "databases", "knowledge.db"
+    os.path.dirname(os.path.dirname(__file__)), "database", "knowledge_new.db"
 )
 DATABASE_URL = f"sqlite:///{db_path}"
 engine = create_engine(DATABASE_URL, echo=False)
@@ -100,8 +108,4 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db():
     """Get database session."""
-    db = SessionLocal()
-    try:
-        return db
-    finally:
-        db.close()
+    return SessionLocal()

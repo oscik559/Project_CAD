@@ -1,0 +1,10 @@
+# Core dependencies for CATIA documentation scraping
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+sqlalchemy>=2.0.0
+pyyaml>=6.0.0
+lxml>=4.9.0
+
+# Development dependencies (optional)
+# Install with: pip install -r requirements.txt -r requirements-dev.txt
+# Or use: pip install -e ".[dev]" if you have pyproject.toml

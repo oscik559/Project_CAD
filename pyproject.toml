@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "catia-documentation-scraper"
+version = "1.0.0"
+description = "Comprehensive CATIA V5 documentation scraper and knowledge extraction system"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Oscar Chigozie Ikechukwu", email = "oscik559@example.com"}
+]
+keywords = ["catia", "cad", "documentation", "scraping", "automation"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Manufacturing",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Computer Aided Design",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.0",
+    "sqlalchemy>=2.0.0",
+    "pyyaml>=6.0.0",
+    "lxml>=4.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+]
+docs = [
+    "sphinx>=5.0.0",
+    "sphinx-rtd-theme>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/oscik559/Project_CAD"
+Repository = "https://github.com/oscik559/Project_CAD"
+Documentation = "https://github.com/oscik559/Project_CAD#readme"
+"Bug Reports" = "https://github.com/oscik559/Project_CAD/issues"
+
+[project.scripts]
+catia-scraper = "scraping.crawler:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["scraping*"]
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--strict-markers --strict-config --verbose"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true

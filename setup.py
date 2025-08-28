@@ -1,10 +1,10 @@
 from setuptools import find_packages, setup
 
 setup(
-    name="agentic_reasoning",
-    version="0.2.0",
+    name="catia-documentation-scraper",
+    version="1.0.0",
     author="Oscar Chigozie Ikechukwu",
-    description="Multi-agent system for CAD and reasoning tasks",
+    description="Comprehensive CATIA V5 documentation scraper and knowledge extraction system",
     # Ensure README is opened with UTF-8 to avoid encoding errors on Windows
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
