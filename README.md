@@ -10,7 +10,7 @@ A comprehensive Python system for scraping and extracting CATIA V5 interface doc
 This project provides an advanced web scraping system that extracts comprehensive CATIA V5 interface documentation from http://catiadoc.free.fr/. Using sophisticated HTML parsing and pattern recognition, it captures detailed information about:
 
 - **Interfaces** with complete inheritance hierarchies and type information
-- **Properties** with detailed descriptions, types, and access patterns  
+- **Properties** with detailed descriptions, types, and access patterns
 - **Methods** with comprehensive signatures, parameters, and return types
 - **Collections** and their relationships
 - **Hierarchical relationships** with full inheritance chains
@@ -364,7 +364,7 @@ if interface:
         'property_count': interface.property_count,
         'method_count': interface.method_count
     }
-    
+
     with open(f"{interface_name}_documentation.json", "w") as f:
         json.dump(export_data, f, indent=2)
     print(f"Exported {interface_name} documentation to JSON")
