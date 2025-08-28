@@ -65,12 +65,6 @@ class KnowledgeBaseHandler:
         """Store interface from dictionary data (used by scraper)."""
         interface_name = interface_data.get("name")
         
-        # Check if interface already exists
-        existing_interface = self.get_interface(interface_name)
-        if existing_interface:
-            logger.info(f"Interface {interface_name} already exists, skipping...")
-            return existing_interface
-        
         # Calculate counts from detailed data
         property_count = 0
         if interface_data.get('properties_detailed'):
@@ -263,4 +257,4 @@ class KnowledgeBaseHandler:
             db.query(Enum).delete()
             db.query(Typedef).delete()
             db.commit()
-            logger.info("Database cleared")
+            logger.info("Database cleared completely")

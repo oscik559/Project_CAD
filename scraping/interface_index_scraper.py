@@ -700,39 +700,18 @@ class InterfaceIndexScraper:
             logger.error(f"Error scraping interface {interface_name}: {e}")
             return None
 
-    def scrape_all_interfaces(self) -> List[Dict[str, any]]:
-        """Scrape all interfaces discovered from the index."""
-        interface_urls = self.discover_interface_urls()
-        results = []
-
-        logger.info(f"Starting to scrape {len(interface_urls)} interfaces...")
-
-        for i, interface_info in enumerate(interface_urls):
-            logger.info(f"Progress: {i + 1}/{len(interface_urls)}")
-
-            interface_data = self.scrape_interface_details(interface_info)
-            if interface_data:
-                results.append(interface_data)
-
-            # Optional: save periodically
-            if (i + 1) % 50 == 0:
-                logger.info(f"Processed {i + 1} interfaces, saving progress...")
-
-        logger.info(
-            f"Completed scraping. Successfully processed {len(results)} interfaces."
-        )
-        return results
-
-    def save_to_database(self, interfaces: List[Dict[str, any]]):
-        """Save scraped interfaces to the database."""
-        for interface in interfaces:
-            self.db_handler.store_interface(interface)
-        logger.info(f"Saved {len(interfaces)} interfaces to database")
-
-
 def main():
     """Main execution function."""
     scraper = InterfaceIndexScraper()
+
+    # Clear the database at the start of each run
+    print("🗑️ Clearing database...")
+    try:
+        scraper.db_handler.clear_database()
+        print("✅ Database cleared successfully")
+    except Exception as e:
+        print(f"❌ Failed to clear database: {e}")
+        return
 
     # Discover all interface URLs
     print("🔍 Discovering interface URLs...")

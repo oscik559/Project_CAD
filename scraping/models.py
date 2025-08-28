@@ -98,7 +98,7 @@ class Typedef(Base):
 import os
 
 db_path = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), "database", "knowledge_new.db"
+    os.path.dirname(os.path.dirname(__file__)), "database", "knowledge.db"
 )
 DATABASE_URL = f"sqlite:///{db_path}"
 engine = create_engine(DATABASE_URL, echo=False)
